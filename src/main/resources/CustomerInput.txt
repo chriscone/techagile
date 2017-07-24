@@ -1,0 +1,5 @@
+{
+  "customerName": "postman test",
+  "customerEmail": "postman test@gmail.com",
+  "customerPhone": "2609613260"
+}

@@ -1,0 +1,68 @@
+buildscript {
+	ext {
+		springBootVersion = '1.5.4.RELEASE'
+	}
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath("gradle.plugin.com.github.lkishalmi.gradle:gradle-gatling-plugin:0.4.1")
+		classpath("info.solidsoft.gradle.pitest:gradle-pitest-plugin:1.1.9")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: "com.github.lkishalmi.gatling"
+apply plugin: "info.solidsoft.pitest"
+
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-actuator')
+	compile('org.springframework.boot:spring-boot-starter-data-jpa')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	runtime('com.h2database:h2')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+
+gatling {
+	jvmArgs = ['-server', '-XX:+UseThreadPriorities',
+			   '-XX:ThreadPriorityPolicy=42',
+			   '-Xms512M', '-Xmx512M', '-Xmn100M',
+			   '-XX:+HeapDumpOnOutOfMemoryError',
+			   '-XX:+AggressiveOpts',
+			   '-XX:+OptimizeStringConcat',
+			   '-XX:+UseFastAccessorMethods',
+			   '-XX:+UseG1GC',
+			   '-Djava.net.preferIPv4Stack=true',
+			   '-Djava.net.preferIPv6Addresses=false']
+}
+
+task runLoadTest(type: JavaExec) {
+	classpath = sourceSets.main.runtimeClasspath + sourceSets.test.runtimeClasspath
+
+	//jvmArgs = [ '-Dgatling.core.directory.binaries=./build/classes/e2eTest' ]
+	// Gatling application
+	main = "io.gatling.app.Gatling"
+	// Specify the simulation to run
+	args = Eval.me("['-s', 'BasicSimulation']")
+}
+
+pitest {
+	threads = 4
+	outputFormats = ['XML', 'HTML']
+}
+
+pitest.targetClasses = ['com.techagile.*']
